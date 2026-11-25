@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>La Cagnotte · week-end à Étretat</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <p class="surtitre">La Cagnotte</p>
+      <h1>Week-end à Étretat</h1>
+      <p class="sous">Léa, Sam et Inès partagent tout à parts égales.</p>
+    </header>
+
+    <main>
+      <section class="carte">
+        <h2>Ajouter une dépense</h2>
+        <form id="formulaire">
+          <label
+            >Libellé
+            <input
+              id="libelle"
+              placeholder="Courses, essence…"
+              autocomplete="off"
+          /></label>
+          <label
+            >Montant (€)
+            <input
+              id="montant"
+              inputmode="decimal"
+              placeholder="12,50"
+              autocomplete="off"
+          /></label>
+          <label
+            >Payé par
+            <select id="payePar"></select
+          ></label>
+          <label>Date <input id="date" type="date" /></label>
+          <button type="submit">Ajouter</button>
+        </form>
+        <p id="erreurs" role="alert"></p>
+      </section>
+
+      <section class="carte">
+        <div class="entete">
+          <h2>Dépenses</h2>
+          <input
+            id="recherche"
+            type="search"
+            placeholder="Chercher…"
+            aria-label="Chercher une dépense"
+          />
+        </div>
+        <ul id="liste"></ul>
+        <p id="vide" hidden>Aucune dépense ne correspond.</p>
+        <p class="total">Total du week-end : <strong id="total"></strong></p>
+      </section>
+
+      <section class="carte">
+        <h2>Soldes</h2>
+        <p class="aide">
+          Positif : le groupe lui doit de l'argent. Négatif : elle ou il doit de
+          l'argent au groupe.
+        </p>
+        <ul id="soldes"></ul>
+      </section>
+
+      <p class="pied">
+        <button id="reinitialiser" type="button">
+          Revenir aux dépenses d'exemple
+        </button>
+      </p>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

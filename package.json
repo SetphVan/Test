@@ -1,0 +1,11 @@
+{
+  "name": "cagnotte",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "La Cagnotte : les dépenses d'un week-end entre amis. Terrain du Jour 8 : des tests, des mutants, un robot relecteur.",
+  "scripts": {
+    "start": "node serveur.mjs",
+    "test": "node --test"
+  }
+}
