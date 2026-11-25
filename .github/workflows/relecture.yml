@@ -1,0 +1,66 @@
+# Le robot relecteur : à chaque pull request, un agent lit le diff et laisse UN commentaire.
+# Il ne fusionne jamais : c'est un humain qui décide.
+name: relecture
+
+on:
+  pull_request:
+
+# Le minimum : lire le code, écrire un commentaire sur la pull request. Rien d'autre.
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  relecture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Le code proposé par la pull request : on n'en lit QUE le diff.
+      - uses: actions/checkout@v4
+        with:
+          path: proposee
+          fetch-depth: 0
+          persist-credentials: false
+
+      # La branche de base, de confiance : c'est d'ici que le robot travaille, avec SA consigne et SON agent.
+      - uses: actions/checkout@v4
+        with:
+          path: base
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Installer OpenCode
+        run: npm install -g @opencode/cli@2.3.0
+
+      - name: Le robot lit le diff et écrit son avis
+        working-directory: base
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          git -C ../proposee diff "$BASE"...HEAD > ../diff.txt
+          # La pull request qui installe le robot : main n'a pas encore sa consigne. Rien à relire, on le dit.
+          if [ ! -f .github/robot/consigne.md ] || [ ! -f .opencode/agents/relecteur.md ]; then
+            echo "Le robot n'est pas encore sur main : il relira les prochaines pull requests, une fois celle-ci fusionnée." > ../avis.md
+            exit 0
+          fi
+          if [ -n "$DEEPSEEK_API_KEY" ]; then MODELE=deepseek/deepseek-flash; else MODELE=opencode/deepseek-v4.1-flash-free; fi
+          { cat .github/robot/consigne.md; echo; echo '```diff'; head -c 60000 ../diff.txt; echo '```'; } > ../demande.txt
+          opencode run --standalone --agent relecteur --format json -m "$MODELE" < ../demande.txt > ../robot.jsonl 2> ../robot.err || true
+          jq -r 'select(.type=="text") | .part.text' ../robot.jsonl > ../avis.md || true
+          jq -c 'select(.type=="error") | .error.message' ../robot.jsonl || true
+          tail -5 ../robot.err || true
+          if [ ! -s ../avis.md ]; then
+            echo "Le robot n'a pas pu relire cette fois (modèle indisponible ou limite atteinte). Relisez vous-même." > ../avis.md
+          fi
+
+      - name: Publier l'avis sur la pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMERO: ${{ github.event.pull_request.number }}
+          GH_REPO: ${{ github.repository }}
+        run: gh pr comment "$NUMERO" --body-file avis.md
