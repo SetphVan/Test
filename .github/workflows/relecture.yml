@@ -40,7 +40,7 @@ jobs:
         working-directory: base
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           git -C ../proposee diff "$BASE"...HEAD > ../diff.txt
           # La pull request qui installe le robot : main n'a pas encore sa consigne. Rien à relire, on le dit.
@@ -48,7 +48,7 @@ jobs:
             echo "Le robot n'est pas encore sur main : il relira les prochaines pull requests, une fois celle-ci fusionnée." > ../avis.md
             exit 0
           fi
-          if [ -n "$DEEPSEEK_API_KEY" ]; then MODELE=deepseek/deepseek-flash; else MODELE=opencode/deepseek-v4.1-flash-free; fi
+          if [ -n "$OPENROUTER_API_KEY" ]; then MODELE=deepseek/deepseek-flash; else MODELE=opencode/deepseek-v4.1-flash-free; fi
           { cat .github/robot/consigne.md; echo; echo '```diff'; head -c 60000 ../diff.txt; echo '```'; } > ../demande.txt
           opencode run --standalone --agent relecteur --format json -m "$MODELE" < ../demande.txt > ../robot.jsonl 2> ../robot.err || true
           jq -r 'select(.type=="text") | .part.text' ../robot.jsonl > ../avis.md || true
